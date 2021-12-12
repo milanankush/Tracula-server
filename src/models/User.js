@@ -22,8 +22,27 @@ const userSchema = mongoose.Schema({
         default: false,
     },
 },{
+    toObject: {
+        virtuals: true,
+    },
+    toJSON: {
+        virtuals: true,
+    },
     timestamp: true,
 });
+
+//virtual
+userSchema.virtual("expenses", {
+    ref: "Expense",
+    foreignField: "user",
+    localField: "_id",
+  });
+  
+  userSchema.virtual("income", {
+    ref: "Income",
+    foreignField: "user",
+    localField: "_id",
+  });
 
 userSchema.pre('save', async function(next) {
     if(!this.isModified("password")){
@@ -33,6 +52,10 @@ userSchema.pre('save', async function(next) {
     this.password = await bcrypt.hash(this.password, salt);
     next();
 });
+
+userSchema.methods.isPasswordMatch = async function(enteredPassword) {
+    return await bcrypt.compare(enteredPassword, this.password);
+}
 
 const User = mongoose.model('User', userSchema);
 module.exports = User;
